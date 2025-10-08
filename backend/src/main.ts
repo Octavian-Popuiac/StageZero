@@ -39,7 +39,7 @@ app.use((req: Request, res: Response, next) => {
 
 app.use('/v1', router());
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/v1', (req: Request, res: Response) => {
   res.json({
     message: 'StageZero API is running'
   })

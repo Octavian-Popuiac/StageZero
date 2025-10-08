@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import VotingPage from './pages/VotingPage';
 import DisplayPage from './pages/DisplayPage';
+import ControllerPage from './pages/ControllerPage';
+import ConnectionStatus from './components/ConnectionStatus';
 import './App.css';
 
 function App() {
@@ -10,8 +11,8 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/vote" element={<VotingPage />} />
           <Route path="/display" element={<DisplayPage />} />
+          <Route path="/controller" element={<ControllerPage />} />
         </Routes>
       </div>
     </Router>
@@ -21,13 +22,14 @@ function App() {
 const HomePage: React.FC = () => {
   return (
     <div className="home-page">
+      <ConnectionStatus />
       <h1>🏁 StageZero</h1>
       <div className="nav-links">
-        <Link to="/vote" className="nav-btn">
-          📱 Votar (Pilotos)
-        </Link>
         <Link to="/display" className="nav-btn">
           📺 Display (Projetor)
+        </Link>
+        <Link to="/controller" className="nav-btn">
+          🎮 Controlo (Telemóvel)
         </Link>
       </div>
     </div>
