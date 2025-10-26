@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { CompetitorPositionProps } from "./PrologosPosition";
+import { teamService } from "../services/supabaseService";
 
 const COUNTRIES = [
   { name: 'Portugal' },
@@ -44,6 +45,8 @@ const TeamManager: React.FC = () => {
   const [teams, setTeams] = useState<CompetitorPositionProps[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<CompetitorPositionProps | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CompetitorPositionProps>({
     number: 1,
@@ -56,15 +59,31 @@ const TeamManager: React.FC = () => {
   });
 
   useEffect(() => {
-    const savedTeams = localStorage.getItem('stagezero_teams');
-    if (savedTeams) {
-      setTeams(JSON.parse(savedTeams));
-    }
+    loadTeams();
+
+    const subscription = teamService.subscribeToTeamChanges((updatedTeams) => {
+      setTeams(updatedTeams);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('stagezero_teams', JSON.stringify(teams));
-  }, [teams]);
+  const loadTeams = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const teamsData = await teamService.getTeams();
+      setTeams(teamsData);
+    } catch (err) {
+      setError('Erro ao carregar as equipas.');
+      console.error(err);
+    }finally{
+      setIsLoading(false);
+    }
+  }
 
   const handleInputChange = (field: keyof CompetitorPositionProps, value: string | number) => {
     setFormData(prev => ({
@@ -73,10 +92,14 @@ const TeamManager: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newTeam : CompetitorPositionProps = {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const newTeam : CompetitorPositionProps = {
       number: formData.number,
       carBrand: formData.carBrand,
       pilotName: formData.pilotName,
@@ -88,13 +111,13 @@ const TeamManager: React.FC = () => {
     console.log('Submitting team:', newTeam);
 
     if (editingTeam) {
-      setTeams(prev => prev.map(team => 
-        team.number === editingTeam.number ? newTeam : team
-      ));
+      await teamService.updateTeam(newTeam);
       setEditingTeam(null);
     } else {
-      setTeams(prev => [...prev, newTeam]);
+      await teamService.addTeam(newTeam);
     }
+
+    await loadTeams();
 
     setFormData({
       number: Math.max(...teams.map(t => t.number), 0) + 1,
@@ -105,37 +128,57 @@ const TeamManager: React.FC = () => {
       navigatorCountry: '',
       time: '',
     });
+    
     setShowForm(false);
+  } catch (err) {
+    setError('Erro ao submeter a equipa.');
+    console.error(err);
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const handleEdit = (team: CompetitorPositionProps) => {
-    setFormData({
-      number: team.number,
-      carBrand: team.carBrand,
-      pilotName: team.pilotName,
-      pilotCountry: team.pilotCountry,
-      navigatorName: team.navigatorName,
-      navigatorCountry: team.navigatorCountry,
-      time: team.time,
-    });
+    setFormData(team);
     setEditingTeam(team);
     setShowForm(true);
   }
 
-  const handleDelete = (teamNumber: number) => {
+  const handleDelete = async(teamNumber: number) => {
     const confirmDelete = window.confirm(`Apagar equipa #${teamNumber}?`);
     if(confirmDelete) {
-      setTeams(prev => prev.filter(team => team.number !== teamNumber));
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        await teamService.deleteTeam(teamNumber);
+        await loadTeams();
+      } catch (err) {
+        setError('Erro ao apagar a equipa.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const confirmReset = window.confirm('Apagar TODAS as equipas? Esta ação não pode ser desfeita!');
     if(confirmReset) {
-      setTeams([]);
-      localStorage.removeItem('stagezero_teams');
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        await teamService.resetTeams();
+        await loadTeams();
+      } catch (err) {
+        setError('Erro ao resetar as equipas.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }
+  };
 
   const sortedTeams = [...teams].sort((a, b) => {
     if (!a.time || !b.time) return 0;
@@ -146,6 +189,18 @@ const TeamManager: React.FC = () => {
 
   return (
     <div className="team-manager">
+      {isLoading && 
+        <div className="loading-overlay">
+          A carregar...
+        </div>
+      }
+
+      {
+        error &&
+        <div className="error-message">
+          {error}
+        </div>
+      }
       <div className="team-manager-header">
         <h2>Gestão de Equipas ({sortedTeams.length})</h2>
         <div className="header-btn">
@@ -164,18 +219,19 @@ const TeamManager: React.FC = () => {
                 time: '',
               });
             }}
+            disabled={isLoading}
           >
             {showForm ? 'Cancelar' : 'Adicionar Equipa'}
           </button>
 
           {teams.length > 0 && (
-            <button className="reset-btn" onClick={handleReset}>
+            <button className="reset-btn" onClick={handleReset} disabled={isLoading}>
               Resetar tudo
             </button>
           )}
         </div>
       </div>
-
+          
       {showForm && (
         <form className="team-form" onSubmit={handleSubmit}>
           <h3>{editingTeam ? 'Editar Equipa' : 'Adicionar Equipa'}</h3>

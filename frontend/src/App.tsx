@@ -5,18 +5,21 @@ import ControllerPage from './pages/ControllerPage';
 import TeamManager from './components/TeamManager';
 import ConnectionStatus from './components/ConnectionStatus';
 import './App.css';
+import { PositionProvider } from './contexts/PositionContext';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/display" element={<DisplayPage />} />
-          <Route path="/controller" element={<ControllerPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <PositionProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/display" element={<DisplayPage />} />
+            <Route path="/controller" element={<ControllerPage />} />
+          </Routes>
+        </div>
+      </Router>
+    </PositionProvider>
   );
 }
 
