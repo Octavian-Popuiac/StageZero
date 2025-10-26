@@ -244,3 +244,15 @@
   flex-direction: column;
   gap: 20px;
 }
+
+.controller-page {
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  background: #6DAAD8;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  justify-content: center;
+}

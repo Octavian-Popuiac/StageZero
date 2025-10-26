@@ -23,11 +23,6 @@ const ControllerPage: React.FC = () => {
     resetPositions
   } = usePosition();
 
-  console.log('🎮 ControllerPage render:');
-  console.log('📊 competitors from context:', competitors.length, competitors);
-  console.log('🎯 selectingCompetitor from context:', selectingCompetitor?.pilotName);
-  console.log('🔧 loading:', loading);
-
   const [algorithmConfig, setAlgorithmConfig] = useState<AlgorithmConfig>({
     enabled: false,
     type: 'custom'
@@ -36,7 +31,7 @@ const ControllerPage: React.FC = () => {
   // Funções de controlo do selecting competitor
   const handleStartSelection = async() => {
     if (competitors.length > 0) {
-      console.log('🏁 Starting selection with first competitor');
+      console.log('Starting selection with first competitor');
       await setSelectingCompetitor(competitors[0]);
       await setCurrentPosition(1);
     }
@@ -48,7 +43,7 @@ const ControllerPage: React.FC = () => {
     const currentIndex = competitors.findIndex(c => c.number === selectingCompetitor.number);
     if (currentIndex !== -1 && currentIndex < competitors.length - 1) {
       const nextCompetitor = competitors[currentIndex + 1];
-      console.log('➡️ Moving to next competitor:', nextCompetitor.pilotName);
+      console.log('Moving to next competitor:', nextCompetitor.pilotName);
       await setSelectingCompetitor(nextCompetitor);
       await setCurrentPosition(1); // Reset posição para 1
     } else {
@@ -160,7 +155,7 @@ const ControllerPage: React.FC = () => {
     return (
       <div className="controller-page">
         <div className="controller-waiting">
-          <h2>⏳ A carregar posições...</h2>
+          <h2>A carregar posições...</h2>
         </div>
       </div>
     );
@@ -171,8 +166,8 @@ const ControllerPage: React.FC = () => {
     return (
       <div className="controller-page">
         <div className="controller-waiting">
-          <h1>🎮 Controlo</h1>
-          
+          <h1>Controlo</h1>
+
           {competitors.length === 0 ? (
             <div className="waiting-state">
               <div className="waiting-icon">📝</div>
@@ -181,11 +176,11 @@ const ControllerPage: React.FC = () => {
             </div>
           ) : (
             <div className="competitor-selection">
-              <h2>👥 Selecionar Competidor</h2>
+              <h2>Selecionar Competidor</h2>
               <p>Escolhe qual competidor vai selecionar a posição:</p>
               
               <button className="start-first-btn" onClick={() => handleStartSelection()}>
-                🏁 Começar com o 1º Classificado
+                Começar com o 1º Classificado
               </button>
               
               <div className="competitors-list">
@@ -213,7 +208,7 @@ const ControllerPage: React.FC = () => {
               </div>
               
               <button className="reset-all-btn" onClick={() => handleResetAll()}>
-                🔄 Resetar Todas as Posições
+                Resetar Todas as Posições
               </button>
             </div>
           )}
@@ -226,7 +221,7 @@ const ControllerPage: React.FC = () => {
     <div className="controller-page">
       <div className="controller-container">
         <header className="controller-header">
-          <h2>🎮 Escolha de Posição</h2>
+          <h2>Escolha de Posição</h2>
           
           <div className="algorithm-toggle">
             <label>
