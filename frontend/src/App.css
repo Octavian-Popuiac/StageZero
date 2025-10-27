@@ -249,10 +249,190 @@
   min-width: 100%;
   min-height: 100%;
   display: flex;
+  flex-direction: column;
   background: #6DAAD8;
   overflow: hidden;
   position: fixed;
   top: 0;
   left: 0;
   justify-content: center;
+  align-items: center;
 }
+
+.controller-container {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  min-height: 60vh;
+  background: #14638D;
+  border-radius: 1rem;
+  border: 2px solid white;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.controller-header {
+  background: white;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-content: center;
+}
+
+.controller-header-text {
+  color: #14638D;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.position-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.position-display {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.position-label {
+  display: block;
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.position-number {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #14638D;
+}
+
+.navigation-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* TRIÂNGULOS */
+.triangle-up {
+  width: 0;
+  height: 0;
+  border-left: 1rem solid transparent;
+  border-right: 1rem solid transparent;
+  border-bottom: 1.5rem solid #14638D;
+  transition: border-bottom-color 0.2s ease;
+}
+
+.triangle-down {
+  width: 0;
+  height: 0;
+  border-left: 1rem solid transparent;
+  border-right: 1rem solid transparent;
+  border-top: 1.5rem solid #14638D;
+  transition: border-top-color 0.2s ease;
+}
+
+.nav-btn:disabled .triangle-up {
+  border-bottom-color: #ccc;
+}
+
+.nav-btn:disabled .triangle-down {
+  border-top-color: #ccc;
+}
+
+/* BOTÃO CIRCULAR DE CONFIRMAÇÃO */
+.confirm-btn-circle {
+  background: #28a745;
+  border: none;
+  border-radius: 50%;
+  width: 6rem;
+  height: 6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+.confirm-btn-circle:hover:not(:disabled) {
+  background: #218838;
+  transform: scale(1.1);
+  box-shadow: 0 8px 16px rgba(40, 167, 69, 0.4);
+}
+
+.confirm-btn-circle:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.confirm-btn-circle:disabled {
+  background: #dc3545;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.circle {
+  background: white;
+  border-radius: 50%;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.confirm-btn-circle:disabled .circle {
+  color: #dc3545;
+}
+
+.competitor-info {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.team-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #14638D;
+  margin-bottom: 0.5rem;
+}
+
+.team-members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.member-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+

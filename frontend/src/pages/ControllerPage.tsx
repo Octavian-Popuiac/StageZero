@@ -217,28 +217,26 @@ const ControllerPage: React.FC = () => {
     );
   }
 
-  return (
+    return (
     <div className="controller-page">
+      <img src={'BAJA_DE_LAGOS.png'}  alt="Logo" className="baja-logo" />
       <div className="controller-container">
-        <header className="controller-header">
-          <h2>Escolha de Posição</h2>
+  
+        {/* Informação do Competidor */}
+        <div className="competitor-info">
+          <div className="team-number">#{selectingCompetitor.number}</div>
           
-          <div className="algorithm-toggle">
-            <label>
-              <input
-                type="checkbox"
-                checked={algorithmConfig.enabled}
-                onChange={(e) => setAlgorithmConfig(prev => ({
-                  ...prev,
-                  enabled: e.target.checked
-                }))}
-              />
-              🔮 Algoritmo
-            </label>
+          <div className="team-members">
+            <div className="member">
+              <span className="member-name">{selectingCompetitor.pilotName}</span>
+            </div>
+            <div className="member">
+              <span className="member-name">{selectingCompetitor.navigatorName}</span>
+            </div>
           </div>
-        </header>
-
-        {/* Controles de navegação entre competidores */}
+        </div>
+  
+        {/* Navegação entre Competidores */}
         <div className="competitor-navigation">
           <div className="nav-info">
             <span>Competidor {getCurrentCompetitorIndex() + 1} de {competitors.length}</span>
@@ -253,10 +251,6 @@ const ControllerPage: React.FC = () => {
               ⬅️ Anterior
             </button>
             
-            <button className="skip-btn" onClick={() => handleSkipCompetitor()}>
-              ⏭️ Saltar
-            </button>
-            
             <button 
               className="nav-competitor-btn" 
               onClick={() => handleNextCompetitor()}
@@ -265,142 +259,51 @@ const ControllerPage: React.FC = () => {
               Próximo ➡️
             </button>
           </div>
-          
-          <button className="reset-btn" onClick={() => handleResetAll()}>
-            🔄 Reset Tudo
-          </button>
         </div>
-
-        {/* Informação do competidor atual */}
-        <div className="competitor-info">
-          <div className="competitor-card">
-            <div className="competitor-number">#{selectingCompetitor.number}</div>
-            <div className="competitor-details">
-              <div className="car-brand">{selectingCompetitor.carBrand}</div>
-              <div className="crew">
-                <div className="pilot">
-                  <span className="flag">{selectingCompetitor.pilotCountry}</span>
-                  <span className="name">{selectingCompetitor.pilotName}</span>
-                </div>
-                <div className="navigator">
-                  <span className="flag">{selectingCompetitor.navigatorCountry}</span>
-                  <span className="name">{selectingCompetitor.navigatorName}</span>
-                </div>
-              </div>
-              <div className="time">{selectingCompetitor.time}</div>
-            </div>
+  
+        {/* CONTROLOS PRINCIPAIS - Triângulos e Círculo */}
+        <div className="position-controls">
+          <div className="position-display">
+            <span className="position-label">POSIÇÃO</span>
+            <div className="position-number">{currentPosition}º</div>
           </div>
-        </div>
-
-        {/* Modo Algoritmo vs Manual */}
-        {algorithmConfig.enabled ? (
-          <div className="algorithm-mode">
-            <div className="algorithm-info">
-              <h3>🔮 Modo Algoritmo Ativo</h3>
-              <p>Tipo: {algorithmConfig.type}</p>
-              <p>O algoritmo irá determinar a melhor posição automaticamente.</p>
-            </div>
-            
+  
+          <div className="navigation-controls">
+            {/* ▲ Triângulo para SUBIR */}
             <button 
-              className="algorithm-btn"
-              onClick={() => executeAlgorithm()}
+              className="nav-btn up" 
+              onClick={() => moveUp()}
+              disabled={currentPosition === 1}
             >
-              🎯 EXECUTAR ALGORITMO
+              <div className="triangle-up"></div>
             </button>
-          </div>
-        ) : (
-          <div className="manual-mode">
-            <div className="position-display">
-              <div className="position-label">Posição de Partida</div>
-              <div className="position-number">{currentPosition}º</div>
-              <div className="position-hint">
-                {isPositionOccupied(currentPosition) ? 
-                  '⚠️ Posição ocupada' : 
-                  'Use ▲▼ para navegar, ✓ para confirmar'
-                }
-              </div>
-            </div>
-
-            <div className="navigation-controls">
-              <button 
-                className="nav-btn up" 
-                onClick={() => moveUp()}
-                disabled={currentPosition === 1}
-              >
-                ▲
-              </button>
-              
-              <div className={`position-indicator ${isPositionOccupied(currentPosition) ? 'occupied' : ''}`}>
-                {currentPosition}º
-                {isPositionOccupied(currentPosition) && ' 🚫'}
-              </div>
-              
-              <button 
-                className="nav-btn down" 
-                onClick={() => moveDown()}
-                disabled={currentPosition === 10}
-              >
-                ▼
-              </button>
-            </div>
-
+            
+            {/* ● Círculo para CONFIRMAR */}
             <button 
-              className="confirm-btn" 
+              className="confirm-btn-circle" 
               onClick={() => handlePositionSelection()}
               disabled={isPositionOccupied(currentPosition)}
             >
-              {isPositionOccupied(currentPosition) ? 
-                '🚫 POSIÇÃO OCUPADA' : 
-                `✓ CONFIRMAR POSIÇÃO ${currentPosition}º`
-              }
+              <div className="circle">
+                <span>✓</span>
+              </div>
+            </button>
+            
+            {/* ▼ Triângulo para DESCER */}
+            <button 
+              className="nav-btn down" 
+              onClick={() => moveDown()}
+              disabled={currentPosition === 10}
+            >
+              <div className="triangle-down"></div>
             </button>
           </div>
-        )}
-
-        <div className="positions-preview">
-          <div className="positions-title">Posições:</div>
-          <div className="positions-grid">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(pos => {
-              const occupied = isPositionOccupied(pos);
-              const selected = pos === currentPosition;
-              
-              return (
-                <div 
-                  key={pos}
-                  className={`position-slot ${selected ? 'selected' : ''} ${occupied ? 'occupied' : ''}`}
-                  onClick={() => handlePositionClick(pos)}
-                >
-                  {pos}º
-                  {occupied && ' 🚫'}
-                </div>
-              );
-            })}
-          </div>
         </div>
-
-        {algorithmConfig.enabled && (
-          <div className="algorithm-config">
-            <h4>⚙️ Configurações do Algoritmo</h4>
-            <div className="config-options">
-              <select
-                value={algorithmConfig.type}
-                onChange={(e) => setAlgorithmConfig(prev => ({
-                  ...prev,
-                  type: e.target.value as any
-                }))}
-              >
-                <option value="custom">Personalizado</option>
-                <option value="time_based">Baseado em Tempo</option>
-                <option value="random">Aleatório</option>
-                <option value="voting">Sistema de Votação</option>
-              </select>
-              
-              <div className="config-placeholder">
-                <p>⚙️ Configurações específicas do algoritmo serão implementadas aqui</p>
-              </div>
-            </div>
-          </div>
-        )}
+  
+        {/* Botão Reset */}
+        <button className="reset-btn" onClick={() => handleResetAll()}>
+          Reset Tudo
+        </button>
       </div>
     </div>
   );
