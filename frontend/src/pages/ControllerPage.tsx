@@ -237,14 +237,14 @@ const ControllerPage: React.FC = () => {
         </div>
   
         {/* Navegação entre Competidores */}
-        <div className="competitor-navigation">
-          <div className="nav-info">
-            <span>Competidor {getCurrentCompetitorIndex() + 1} de {competitors.length}</span>
+        <div className="team-navigation">
+          <div className="team-progress">
+            <span>Equipa {getCurrentCompetitorIndex() + 1} de {competitors.length}</span>
           </div>
           
-          <div className="nav-controls">
+          <div className="teams-controls">
             <button 
-              className="nav-competitor-btn" 
+              className="teams-competitor-btn" 
               onClick={() => handlePreviousCompetitor()}
               disabled={getCurrentCompetitorIndex() === 0}
             >
@@ -252,7 +252,7 @@ const ControllerPage: React.FC = () => {
             </button>
             
             <button 
-              className="nav-competitor-btn" 
+              className="teams-competitor-btn" 
               onClick={() => handleNextCompetitor()}
               disabled={getCurrentCompetitorIndex() === competitors.length - 1}
             >
@@ -268,40 +268,40 @@ const ControllerPage: React.FC = () => {
             <div className="position-number">{currentPosition}º</div>
           </div>
   
-          <div className="navigation-controls">
+          <div className="teams-navigation-controls">
             {/* ▲ Triângulo para SUBIR */}
             <button 
-              className="nav-btn up" 
+              className="teams-nav-btn up" 
               onClick={() => moveUp()}
               disabled={currentPosition === 1}
             >
-              <div className="triangle-up"></div>
+              <div className="teams-triangle-up"></div>
             </button>
             
             {/* ● Círculo para CONFIRMAR */}
             <button 
-              className="confirm-btn-circle" 
+              className="teams-confirm-btn-circle" 
               onClick={() => handlePositionSelection()}
               disabled={isPositionOccupied(currentPosition)}
             >
-              <div className="circle">
+              <div className="teams-circle">
                 <span>✓</span>
               </div>
             </button>
             
             {/* ▼ Triângulo para DESCER */}
             <button 
-              className="nav-btn down" 
+              className="teams-nav-btn down" 
               onClick={() => moveDown()}
               disabled={currentPosition === 10}
             >
-              <div className="triangle-down"></div>
+              <div className="teams-triangle-down"></div>
             </button>
           </div>
         </div>
   
         {/* Botão Reset */}
-        <button className="reset-btn" onClick={() => handleResetAll()}>
+        <button className="teams-reset-btn" onClick={() => handleResetAll()}>
           Reset Tudo
         </button>
       </div>
