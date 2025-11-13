@@ -1,26 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import socket from '../services/socketService';
-import Vote from '../types/Vote';
+import React, { useState, useEffect, useRef, use } from 'react';
 import PrologosPosition, { CompetitorPositionProps } from '../components/PrologosPosition';
 import PositionSlot from '../components/PositionSlot';
 import SelectingCompetitor from '../components/SelectingCompetitor';
-import { teamService } from '../services/supabaseService';
+import { selectionService, teamService } from '../services/supabaseService';
 import { usePosition } from '../contexts/PositionContext';
-
-interface StartPosition {
-  position: number;
-  competitor: CompetitorPositionProps | null;
-}
 
 const DisplayPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [results, setResults] = useState<CompetitorPositionProps[]>([]);
 
+  const lastProcessedCompetitor = useRef<number | null>(null);
+  const isProcessing = useRef(false);
+
   const {
     startPositions,
+    setCompetitors,
+    competitors,
     selectingCompetitor,
+    getNextCompetitorToVote,
     setSelectingCompetitor,
-    setCompetitors
+    currentPosition
   } = usePosition();
 
   useEffect(() => {
@@ -28,11 +27,16 @@ const DisplayPage: React.FC = () => {
   
   }, []);
 
+  useEffect(() => {
+    console.log('📺 DisplayPage - Current competitor:', selectingCompetitor?.pilotName || 'none');
+  }, [selectingCompetitor]);
+
   const loadTeamsFromSupabase = async () => {
     try {
       setIsLoading(true);
       const teamsData = await teamService.getTeams();
       setResults(teamsData);
+      setCompetitors(teamsData);
     }catch (error) {
       console.error('Error loading teams from Supabase:', error);
     }finally {
@@ -40,27 +44,7 @@ const DisplayPage: React.FC = () => {
     }
   };
 
-  const sortedResults = [...results].sort((a,b) => {
-    const timeA = a.time.split(':').reduce((acc, val) => acc * 60 + parseFloat(val), 0);
-    const timeB = b.time.split(':').reduce((acc, val) => acc * 60 + parseFloat(val), 0);
-    return timeA - timeB;
-  });
-
-  useEffect(() => {
-    console.log('🔄 Updating context with teams:', sortedResults.length); // Debug
-    
-    if (sortedResults.length > 0) {
-      // Atualizar lista de competidores no context
-      setCompetitors(sortedResults);
-      
-      // Se não há ninguém selecionando, começar com o primeiro
-      if (!selectingCompetitor) {
-        console.log('🎯 Setting first competitor:', sortedResults[0].pilotName); // Debug
-        setSelectingCompetitor(sortedResults[0]);
-      }
-    }
-  }, [sortedResults.length]);
-
+  const sortedResults = competitors;
 
   if(isLoading) {
     return (
@@ -84,7 +68,7 @@ const DisplayPage: React.FC = () => {
           {sortedResults.map((result, index) => (
             <div key={result.number} className='result-row'>
               <div className='position-box'>
-                <span className='position-number'>{index + 1}º</span>
+                <span className='dp-position-number'>{index + 1}º</span>
               </div>
               <PrologosPosition
                 number={result.number}
@@ -108,21 +92,26 @@ const DisplayPage: React.FC = () => {
         </div>
 
         <div className='start-positions'>
-          {startPositions.map(slot => (
-            <PositionSlot
-              key={slot.position}
-              position={slot.position}
-              isOccupied={slot.competitor !== null}
-              competitor={slot.competitor}
-            />
-          ))}
+          {startPositions.map(slot => {
+            const isSelecting =
+              !!(
+                selectingCompetitor &&
+                currentPosition === slot.position &&
+                (!slot.competitor || slot.competitor.number !== selectingCompetitor.number)
+              );
+            return (
+              <PositionSlot
+                key={slot.position}
+                position={slot.position}
+                isOccupied={slot.competitor !== null}
+                competitor={isSelecting ? selectingCompetitor : slot.competitor}
+                isSelecting={isSelecting}
+              />
+            );
+          })}
         </div>
 
-        {selectingCompetitor && (
-          <SelectingCompetitor
-            competitor={selectingCompetitor}
-          />
-        )}
+        <SelectingCompetitor />
       </div>
     </div>
   );

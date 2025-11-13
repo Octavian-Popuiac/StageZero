@@ -95,7 +95,7 @@
   flex-shrink: 0;
 }
 
-.position-number{
+.dp-position-number{
   font-size: 30px;
   font-weight: 500;
   color: white;
@@ -224,6 +224,13 @@
   top: 10px;
 }
 
+.ocupied-competitor{
+  flex: 1;
+  display: flex;
+  position: relative;
+  top: 10px;
+}
+
 .start-positions{
   display: flex;
   flex-direction: column;
@@ -256,6 +263,11 @@
   left: 0;
   justify-content: center;
   align-items: center;
+}
+
+.controller-baja-logo{
+  width: 220px;
+  height: auto;
 }
 
 .controller-container {

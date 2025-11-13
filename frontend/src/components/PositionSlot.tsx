@@ -1,17 +1,21 @@
 import React from "react";
 import PrologosPosition, { CompetitorPositionProps } from "./PrologosPosition";
+import { usePosition } from "../contexts/PositionContext";
 
 interface PositionSlotProps {
   position: number;
   isOccupied: boolean;
   competitor?: CompetitorPositionProps | null;
+  isSelecting?: boolean;
 }
 
 const PositionSlot: React.FC<PositionSlotProps> = ({
   position,
   isOccupied,
   competitor,
+  isSelecting = false
 }) => {
+
   return (
     <div className="slot-container">
       <div className="background-container" />
@@ -20,10 +24,15 @@ const PositionSlot: React.FC<PositionSlotProps> = ({
       </div>
 
       {isOccupied && competitor ? (
-        <PrologosPosition {...competitor} />
+        <div className="ocupied-competitor">
+          <PrologosPosition {...competitor} />
+        </div>
+      ) : isSelecting && competitor ? (
+        <div className="ocupied-competitor selecting">
+          <PrologosPosition {...competitor} />
+        </div>
       ) : (
         <div className="slot-empty">
-          <span className="slot-empty-text">----</span>
         </div>
       )}
     </div>

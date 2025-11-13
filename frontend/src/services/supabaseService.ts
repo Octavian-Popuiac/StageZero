@@ -291,6 +291,7 @@ export const selectionService = {
       const { error } = await supabase
         .from('current_selection')
         .upsert({
+          id: 1,
           selecting_competitor_id: selectingCompetitorId,
           current_position: currentPosition,
           session_id: sessionId,
@@ -342,25 +343,65 @@ export const selectionService = {
     callback: (selection: CurrentSelection) => void,
     sessionId: string = 'default'
   ) {
-    const subscription = supabase
-      .channel('current_selection_sync')
+    console.log('📡 Creating realtime channel for current_selection');
+    
+    const channel = supabase
+      .channel('selection-changes-' + Date.now()) 
       .on('postgres_changes',
         {
-          event: '*',
+          event: '*', 
           schema: 'public',
-          table: 'current_selection'
+          table: 'current_selection',
+          filter: `id=eq.1` 
         },
-        async (payload) => {
-          console.log('Selection change detected!', payload);
+        (payload) => {
+          console.log('🔔 REALTIME EVENT:', {
+            type: payload.eventType,
+            old: payload.old,
+            new: payload.new,
+            timestamp: new Date().toLocaleTimeString()
+          });
           
-          if (payload.eventType === 'UPDATE' && payload.new) {
+          if ((payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') && payload.new) {
             callback(payload.new as CurrentSelection);
           }
         }
       )
-      .subscribe();
+      .subscribe((status, error) => {
+        console.log('Subscription status:', status);
+        if (error) {
+          console.error('Subscription error:', error);
+        }
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime connected successfully!');
+        }
+      });
 
-    return subscription;
+    return channel;
   }
+}
+
+export const swapPositions = async (from: number, to: number) => {
+  const { data: fromData } = await supabase
+    .from('start_position')
+    .select('*')
+    .eq('position', from)
+    .single();
+
+  const { data: toData } = await supabase
+    .from('start_position')
+    .select('*')
+    .eq('position', to)
+    .single();
+
+  await supabase
+    .from('start_position')
+    .update({ team_number: toData.team_number})
+    .eq('position', from);
+
+  await supabase
+    .from('start_position')
+    .update({ team_number: fromData.team_number})
+    .eq('position', to);
 }
 

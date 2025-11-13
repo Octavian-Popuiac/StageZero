@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { usePosition } from '../contexts/PositionContext';
 
 interface AlgorithmConfig {
@@ -10,6 +10,8 @@ interface AlgorithmConfig {
 }
 
 const ControllerPage: React.FC = () => {
+  const [isInitializing, setIsInitializing] = useState(true);
+
   const {
     selectingCompetitor,
     setSelectingCompetitor,
@@ -20,7 +22,8 @@ const ControllerPage: React.FC = () => {
     competitors,
     loading,
     moveToNextCompetitor,
-    resetPositions
+    resetPositions,
+    getNextCompetitorToVote
   } = usePosition();
 
   const [algorithmConfig, setAlgorithmConfig] = useState<AlgorithmConfig>({
@@ -28,59 +31,81 @@ const ControllerPage: React.FC = () => {
     type: 'custom'
   });
 
-  // Funções de controlo do selecting competitor
-  const handleStartSelection = async() => {
-    if (competitors.length > 0) {
-      console.log('Starting selection with first competitor');
-      await setSelectingCompetitor(competitors[0]);
-      await setCurrentPosition(1);
-    }
-  };
+  const [lastProcessedCompetitor, setLastProcessedCompetitor] = useState<number | null>(null);
+  const lastProcessedRef = useRef<number | null>(null);
 
-  const handleNextCompetitor = async () => {
-    if (!selectingCompetitor) return;
-    
-    const currentIndex = competitors.findIndex(c => c.number === selectingCompetitor.number);
-    if (currentIndex !== -1 && currentIndex < competitors.length - 1) {
-      const nextCompetitor = competitors[currentIndex + 1];
-      console.log('Moving to next competitor:', nextCompetitor.pilotName);
-      await setSelectingCompetitor(nextCompetitor);
-      await setCurrentPosition(1); // Reset posição para 1
-    } else {
-      console.log('No more competitors');
-      await setSelectingCompetitor(null);
-    }
-  };
+  
+  useEffect(() => {
+    if(competitors.length > 0 && startPositions.length >0){
+      setIsInitializing(false);
+    } 
+  }, [competitors, startPositions]);
 
-  const handlePreviousCompetitor = async () => {
-    if (!selectingCompetitor) return;
-    
-    const currentIndex = competitors.findIndex(c => c.number === selectingCompetitor.number);
-    if (currentIndex > 0) {
-      const prevCompetitor = competitors[currentIndex - 1];
-      console.log('Moving to previous competitor:', prevCompetitor.pilotName);
-      await setSelectingCompetitor(prevCompetitor);
-      await setCurrentPosition(1);
-    }
-  };
+  useEffect(() => {
+    const handleAutoMove = async () => { 
+      if(isInitializing){
+        console.log('Initialization phase - skipping auto-move');
+        return;
+      }
 
-  const handleSkipCompetitor = async () => {
-    console.log('Skipping competitor:', selectingCompetitor?.pilotName);
-    await handleNextCompetitor();
-  };
+      if(selectingCompetitor) {
+        if(lastProcessedRef.current === selectingCompetitor.number){
+          console.log('Auto-move already processed for competitor:', selectingCompetitor.pilotName);
+          return;
+        }
+
+        const currentHasVoted = startPositions.some(slot => slot.competitor?.number === selectingCompetitor.number);
+        
+        console.log('Auto-move check:', {
+          selectingCompetitor,
+          currentHasVoted
+        });
+        
+        if(currentHasVoted){
+          setLastProcessedCompetitor(selectingCompetitor.number);
+          const nextCompetitor = getNextCompetitorToVote();
+          if(nextCompetitor){
+            // Só muda se for diferente!
+            if (selectingCompetitor.number !== nextCompetitor.number) {
+              await setSelectingCompetitor(nextCompetitor);
+            }
+            if (currentPosition !== 1) {
+              await setCurrentPosition(1);
+            }
+          }else {
+            await setSelectingCompetitor(null);
+          }
+        } else {
+          setLastProcessedCompetitor(null);
+        }
+      }
+    };
+
+    handleAutoMove();
+  }, [startPositions, selectingCompetitor, isInitializing]);
+
+  useEffect(() => {
+    if (!isInitializing && competitors.length > 0 && startPositions.length > 0 && !selectingCompetitor) {
+      // Seleciona o próximo a votar (ou o primeiro)
+      const next = getNextCompetitorToVote();
+      if (next) {
+        setSelectingCompetitor(next);
+        setCurrentPosition(1);
+      }
+    }
+  }, [isInitializing, competitors, startPositions, selectingCompetitor]);
+
+  const isCurrentCompetitorVoted = () => {
+    return startPositions.some(slot => slot.competitor?.number === selectingCompetitor?.number);
+  }
 
   const handleResetAll = async () => {
-    const confirmed = window.confirm('Tens a certeza que queres resetar todas as posições?');
-    if (confirmed) {
-      console.log('Resetting all positions');
-      await resetPositions();
-    }
-  };
-
-  const handleSelectSpecificCompetitor = async (competitor: any) => {
-    console.log('Selecting specific competitor:', competitor.pilotName);
-    await setSelectingCompetitor(competitor);
-    await setCurrentPosition(1);
+    console.log('Resetting all positions');
+    setIsInitializing(true); // ← Importante!
+    await resetPositions();
+    setTimeout(() => {
+      setIsInitializing(false);
+    }, 1000); // Dar tempo para estabilizar
   };
 
   // Funções básicas de navegação
@@ -100,54 +125,21 @@ const ControllerPage: React.FC = () => {
     );
   };
 
-  const handlePositionClick = async (pos: number) => {
-    if (!algorithmConfig.enabled) {
-      await setCurrentPosition(pos);
-    }
-  };
-
   const handlePositionSelection = async () => {
     if (!selectingCompetitor) return;
 
-    if (algorithmConfig.enabled) {
-      await executeAlgorithm();
-    } else {
-      await handleManualConfirm();
-    }
+    await handleConfirm();
   };
 
-  const handleManualConfirm = async () => {
+  const handleConfirm = async () => {
     if (!selectingCompetitor || isPositionOccupied(currentPosition)) return;
     
     try {
       await confirmPosition();
       console.log(`Position ${currentPosition} confirmed for ${selectingCompetitor.pilotName}`);
-      // O moveToNextCompetitor já é chamado dentro do confirmPosition no context
     } catch (error) {
       console.error('Error confirming position:', error);
     }
-  };
-
-  const executeAlgorithm = async () => {
-    console.log('Algorithm execution placeholder');
-    await handleManualConfirm();
-  };
-
-  // Get competitor status
-  const getCompetitorStatus = (competitor: any) => {
-    const hasPosition = startPositions.some(slot => 
-      slot.competitor?.number === competitor.number
-    );
-    const isCurrentlySelecting = selectingCompetitor?.number === competitor.number;
-    
-    if (hasPosition) return 'completed';
-    if (isCurrentlySelecting) return 'selecting';
-    return 'waiting';
-  };
-
-  const getCurrentCompetitorIndex = () => {
-    if (!selectingCompetitor) return -1;
-    return competitors.findIndex(c => c.number === selectingCompetitor.number);
   };
 
   // Loading state
@@ -156,6 +148,17 @@ const ControllerPage: React.FC = () => {
       <div className="controller-page">
         <div className="controller-waiting">
           <h2>A carregar posições...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || isInitializing) {
+    return (
+      <div className="controller-page">
+        <div className="controller-waiting">
+          <h2>A carregar dados...</h2>
+          <p>Aguarde um momento...</p>
         </div>
       </div>
     );
@@ -176,36 +179,7 @@ const ControllerPage: React.FC = () => {
             </div>
           ) : (
             <div className="competitor-selection">
-              <h2>Selecionar Competidor</h2>
-              <p>Escolhe qual competidor vai selecionar a posição:</p>
-              
-              <button className="start-first-btn" onClick={() => handleStartSelection()}>
-                Começar com o 1º Classificado
-              </button>
-              
-              <div className="competitors-list">
-                {competitors.map((competitor, index) => {
-                  const status = getCompetitorStatus(competitor);
-                  return (
-                    <div 
-                      key={competitor.number}
-                      className={`competitor-item ${status}`}
-                      onClick={() => status !== 'completed' && handleSelectSpecificCompetitor(competitor)}
-                    >
-                      <div className="competitor-rank">{index + 1}º</div>
-                      <div className="competitor-details">
-                        <div className="competitor-name">#{competitor.number} {competitor.pilotName}</div>
-                        <div className="competitor-time">{competitor.time}</div>
-                      </div>
-                      <div className="competitor-status">
-                        {status === 'completed' && '✅'}
-                        {status === 'selecting' && '🎯'}
-                        {status === 'waiting' && '⏳'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <h2>Votação Encerrada</h2>
               
               <button className="reset-all-btn" onClick={() => handleResetAll()}>
                 Resetar Todas as Posições
@@ -219,7 +193,7 @@ const ControllerPage: React.FC = () => {
 
     return (
     <div className="controller-page">
-      <img src={'BAJA_DE_LAGOS.png'}  alt="Logo" className="baja-logo" />
+      <img src={'BAJA_DE_LAGOS.png'}  alt="Logo" className="controller-baja-logo" />
       <div className="controller-container">
   
         {/* Informação do Competidor */}
@@ -233,31 +207,6 @@ const ControllerPage: React.FC = () => {
             <div className="member">
               <span className="member-name">{selectingCompetitor.navigatorName}</span>
             </div>
-          </div>
-        </div>
-  
-        {/* Navegação entre Competidores */}
-        <div className="team-navigation">
-          <div className="team-progress">
-            <span>Equipa {getCurrentCompetitorIndex() + 1} de {competitors.length}</span>
-          </div>
-          
-          <div className="teams-controls">
-            <button 
-              className="teams-competitor-btn" 
-              onClick={() => handlePreviousCompetitor()}
-              disabled={getCurrentCompetitorIndex() === 0}
-            >
-              ⬅️ Anterior
-            </button>
-            
-            <button 
-              className="teams-competitor-btn" 
-              onClick={() => handleNextCompetitor()}
-              disabled={getCurrentCompetitorIndex() === competitors.length - 1}
-            >
-              Próximo ➡️
-            </button>
           </div>
         </div>
   
@@ -282,7 +231,7 @@ const ControllerPage: React.FC = () => {
             <button 
               className="teams-confirm-btn-circle" 
               onClick={() => handlePositionSelection()}
-              disabled={isPositionOccupied(currentPosition)}
+              disabled={isPositionOccupied(currentPosition) || isCurrentCompetitorVoted()}
             >
               <div className="teams-circle">
                 <span>✓</span>

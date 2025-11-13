@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import DisplayPage from './pages/DisplayPage';
 import ControllerPage from './pages/ControllerPage';
 import TeamManager from './components/TeamManager';
-import ConnectionStatus from './components/ConnectionStatus';
 import './App.css';
 import { PositionProvider } from './contexts/PositionContext';
 
@@ -28,7 +27,7 @@ const [activeTab, setActiveTab] = React.useState<'nav' | 'teams'>('nav');
 
   return (
     <div className="home-page">
-      <ConnectionStatus />
+
       <h1>🏁 StageZero</h1>
       <div className='tab-buttons'>
         <button className={`tab-btn ${activeTab === 'nav' ? 'active' : ''}`} onClick={() => setActiveTab('nav')}>
