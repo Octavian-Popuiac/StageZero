@@ -278,6 +278,8 @@ export const PositionProvider: React.FC<PositionProviderProps> = ({ children }) 
         )
       );
 
+      await loadCompetitorsFromSupabase();
+
     } catch (error: any) {
       console.error('Error confirming position:', error);
       alert(error.message || 'Erro ao confirmar posição');
