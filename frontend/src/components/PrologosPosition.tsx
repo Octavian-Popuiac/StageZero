@@ -30,14 +30,22 @@ const PrologosPosition: React.FC<CompetitorPositionProps> = ({
       </div>
 
       <div className="crew-box">
-        <div className="pilot-info">
-          <img src={`/flags/${pilotCountry.toLowerCase()}.png`} alt={pilotCountry} className="flag-icon" />
-          <span className="pilot-name">{pilotName}</span>
+        <div className="pilot-box">
+          <div className="pilot-flag">
+            <img src={`/flags/${pilotCountry.toLowerCase()}.png`} className="flag-icon" />
+          </div>
+          <div className="pilot-info">
+            <span className="pilot-name">{pilotName}</span>
+          </div>
         </div>
 
-        <div className="navigator-info">
-          <img src={`/flags/${navigatorCountry.toLowerCase()}.png`} alt={navigatorCountry} className="flag-icon" />
-          <span className="navigator-name">{navigatorName}</span>
+        <div className="navigator-box">
+          <div className="navigator-flag">
+            <img src={`/flags/${navigatorCountry.toLowerCase()}.png`} className="flag-icon" />
+          </div>
+          <div className="navigator-info">
+            <span className="navigator-name">{navigatorName}</span>
+          </div>
         </div>
       </div>
 

@@ -17,7 +17,7 @@ const PositionSlot: React.FC<PositionSlotProps> = ({
 }) => {
 
   return (
-    <div className="slot-container">
+    <div className={`slot-container${isSelecting ? ' selecting' : ''}`}>
       <div className="background-container" />
       <div className="slot-position-box">
         <span className="slot-position-number">{position}º</span>
@@ -28,7 +28,7 @@ const PositionSlot: React.FC<PositionSlotProps> = ({
           <PrologosPosition {...competitor} />
         </div>
       ) : isSelecting && competitor ? (
-        <div className="ocupied-competitor selecting">
+        <div className="ocupied-competitor">
           <PrologosPosition {...competitor} />
         </div>
       ) : (
