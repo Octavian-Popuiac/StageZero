@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { usePosition } from '../contexts/PositionContext';
+import { positionService } from '../services/supabaseService';
 
 interface AlgorithmConfig {
   enabled: boolean;
@@ -132,15 +133,75 @@ const ControllerPage: React.FC = () => {
   };
 
   const handleConfirm = async () => {
-    if (!selectingCompetitor || isPositionOccupied(currentPosition)) return;
+    if (!selectingCompetitor) return;
     
+    const newPositions = insertCompetitorWithCascade(
+      startPositions,
+      selectingCompetitor,
+      currentPosition
+    );
+
+    console.log('New positions after insert:', newPositions);
+
     try {
-      await confirmPosition();
+      await positionService.updateAllPositions(newPositions);
+      //await confirmPosition();
       console.log(`Position ${currentPosition} confirmed for ${selectingCompetitor.pilotName}`);
     } catch (error) {
       console.error('Error confirming position:', error);
     }
   };
+
+  function insertCompetitorWithCascade(
+    positions: { position: number; competitor: any | null }[],
+    competitor: any,
+    targetPosition: number
+  ) {
+    const index = targetPosition - 1;
+    if (!positions[index].competitor) {
+      // Se está livre, só coloca
+      const newPositions = positions.map(p => ({ ...p }));
+      newPositions[index].competitor = competitor;
+      return newPositions;
+    }
+
+    // Procura para baixo
+    let freeIndex = -1;
+    for (let i = index + 1; i < positions.length; i++) {
+      if (!positions[i].competitor) {
+        freeIndex = i;
+        break;
+      }
+    }
+    // Se não encontrou para baixo, procura para cima
+    if (freeIndex === -1) {
+      for (let i = 0; i < index; i++) {
+        if (!positions[i].competitor) {
+          freeIndex = i;
+          break;
+        }
+      }
+    }
+    if (freeIndex === -1) return positions; // Não há vagas (não deve acontecer)
+
+    const newPositions = positions.map(p => ({ ...p }));
+
+    if (freeIndex > index) {
+      // Move todos para baixo
+      for (let i = freeIndex; i > index; i--) {
+        newPositions[i].competitor = newPositions[i - 1].competitor;
+      }
+      newPositions[index].competitor = competitor;
+    } else {
+      // Move todos para cima
+      for (let i = freeIndex; i < index; i++) {
+        newPositions[i].competitor = newPositions[i + 1].competitor;
+      }
+      newPositions[index].competitor = competitor;
+    }
+
+    return newPositions;
+  }
 
   // Loading state
   if (loading) {
@@ -231,7 +292,7 @@ const ControllerPage: React.FC = () => {
             <button 
               className="teams-confirm-btn-circle" 
               onClick={() => handlePositionSelection()}
-              disabled={isPositionOccupied(currentPosition) || isCurrentCompetitorVoted()}
+              disabled={isCurrentCompetitorVoted()}
             >
               <div className="teams-circle">
                 <span>✓</span>

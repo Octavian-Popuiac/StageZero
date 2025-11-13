@@ -173,6 +173,33 @@ export const positionService = {
     return allPosition;
   },
 
+  async updateAllPositions(newPositions: { position: number; competitor: CompetitorPositionProps | null} [],
+    sessionId: string = 'default'
+  ): Promise<void> {
+    await supabase
+      .from('start_position')
+      .delete()
+      .eq('session_id', sessionId);
+      
+    const inserts = newPositions
+      .filter(p => p.competitor)
+      .map(p => ({
+        position: p.position,
+        team_number: p.competitor!.number,
+        session_id: sessionId
+      }));
+    
+      if(inserts.length > 0){
+        const { error } = await supabase
+          .from('start_position')
+          .insert(inserts);
+        
+        if(error){
+          throw error;
+        }
+      }
+  },
+
   async setStartPosition(
     position: number,
     teamNumber: number,
