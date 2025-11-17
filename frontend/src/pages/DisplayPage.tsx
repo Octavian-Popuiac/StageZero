@@ -4,6 +4,7 @@ import PositionSlot from '../components/PositionSlot';
 import SelectingCompetitor from '../components/SelectingCompetitor';
 import { selectionService, teamService } from '../services/supabaseService';
 import { usePosition } from '../contexts/PositionContext';
+import { insertCompetitorWithCascade } from '../utils/positionUtils';
 
 const DisplayPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -21,6 +22,10 @@ const DisplayPage: React.FC = () => {
     setSelectingCompetitor,
     currentPosition
   } = usePosition();
+
+  const positionsToShow = (selectingCompetitor && currentPosition)
+    ? insertCompetitorWithCascade(startPositions, selectingCompetitor, currentPosition)
+    : startPositions;
 
   useEffect(() => {
     loadTeamsFromSupabase();
@@ -92,19 +97,23 @@ const DisplayPage: React.FC = () => {
         </div>
 
         <div className='start-positions'>
-          {startPositions.map(slot => {
+          {positionsToShow.map((slot, idx) => {
+            // Verifica se este slot mudou em relação ao estado real
+            const realSlot = startPositions[idx];
+            const isChanged =
+              (!realSlot.competitor && slot.competitor) || // Slot ficou ocupado
+              (realSlot.competitor && slot.competitor && realSlot.competitor.number !== slot.competitor.number); // Competitor mudou
+
+            // Destaca o slot selecionado ou qualquer slot que mudou no preview
             const isSelecting =
-              !!(
-                selectingCompetitor &&
-                currentPosition === slot.position &&
-                (!slot.competitor || slot.competitor.number !== selectingCompetitor.number)
-              );
+              (selectingCompetitor && currentPosition === slot.position) || isChanged;
+
             return (
               <PositionSlot
                 key={slot.position}
                 position={slot.position}
                 isOccupied={slot.competitor !== null}
-                competitor={isSelecting ? selectingCompetitor : slot.competitor}
+                competitor={slot.competitor}
                 isSelecting={isSelecting}
               />
             );
