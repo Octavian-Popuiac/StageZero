@@ -26,7 +26,7 @@ const PrologosPosition: React.FC<CompetitorPositionProps> = ({
       </div>
 
       <div className="car-brand-box">
-        <img src={`/brands/${carBrand.toLowerCase()}.png`} className="brand-logo" />
+        <img src={`/brands/${carBrand.toUpperCase()}.png`} className="brand-logo" />
       </div>
 
       <div className="crew-box">
