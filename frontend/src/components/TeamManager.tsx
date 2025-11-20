@@ -4,29 +4,9 @@ import { teamService } from "../services/supabaseService";
 
 const COUNTRIES = [
   { name: 'Portugal' },
-  { name: 'Espanha' },
-  { name: 'França' },
-  { name: 'Itália' },
-  { name: 'Reino Unido' },
-  { name: 'Alemanha' },
-  { name: 'Bélgica' },
-  { name: 'Holanda' },
-  { name: 'Áustria' },
-  { name: 'Suíça' },
-  { name: 'Suécia' },
-  { name: 'Noruega' },
-  { name: 'Finlândia' },
-  { name: 'Dinamarca' },
-  { name: 'Polónia' },
-  { name: 'Chéquia' },
-  { name: 'Eslováquia' },
-  { name: 'Hungria' },
-  { name: 'Roménia' },
-  { name: 'Bulgária' },
-  { name: 'Grécia' },
-  { name: 'Estónia' },
-  { name: 'Letónia' },
-  { name: 'Lituânia' }
+  { name: 'Spain' },
+  { name: 'France' },
+  { name: 'Netherlands' },
 ];
 
 const CAR_BRANDS = [

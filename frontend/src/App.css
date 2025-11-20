@@ -195,23 +195,14 @@
   height: 20px;
 }
 
-.navigator-box {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  height: 20px;
-}
-
 .pilot-box, .navigator-box {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  height: 20px;
-  width: 100%;
-  margin-bottom: 2px;
+  height: 23px;
+  width: 160px;
+  margin-bottom: 1px;
 }
 
 .pilot-flag, .navigator-flag {
