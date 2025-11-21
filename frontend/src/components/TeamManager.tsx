@@ -19,6 +19,9 @@ const CAR_BRANDS = [
   'TAURUS',
   'TOYOTA',
   'VOLSKWAGEN',
+  'FIAT',
+  'NISSAN',
+  'YAMAHA'
 ];
 
 const TeamManager: React.FC = () => {

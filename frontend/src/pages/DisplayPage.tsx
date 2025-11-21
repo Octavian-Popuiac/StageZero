@@ -49,6 +49,30 @@ const DisplayPage: React.FC = () => {
     }
   };
 
+  function parseTimeToMs(time: string): number {
+    // Aceita formatos como "m:s:cc" ou "mm:ss:cc"
+    const parts = time.split(':').map(Number);
+    // [min, sec, cent]
+    const min = parts[0] || 0;
+    const sec = parts[1] || 0;
+    const cent = parts[2] || 0;
+    return min * 60000 + sec * 1000 + cent * 10;
+  }
+
+  function formatMsToDiff(ms: number): string {
+    const min = Math.floor(ms / 60000);
+    const sec = Math.floor((ms % 60000) / 1000);
+    const cent = Math.floor((ms % 1000) / 10);
+    return `+${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}:${cent.toString().padStart(2, '0')}`;
+  }
+
+  function formatMsToTime(ms: number): string {
+    const min = Math.floor(ms / 60000);
+    const sec = Math.floor((ms % 60000) / 1000);
+    const cent = Math.floor((ms % 1000) / 10);
+    return `${min}:${sec.toString().padStart(2, '0')}:${cent.toString().padStart(2, '0')}`;
+  }
+
   const sortedResults = competitors;
 
   if(isLoading) {
@@ -70,22 +94,32 @@ const DisplayPage: React.FC = () => {
           </h1>
         </div>
         <div className='competitors-results'>
-          {sortedResults.map((result, index) => (
-            <div key={result.number} className='result-row'>
-              <div className='position-box'>
-                <span className='dp-position-number'>{index + 1}º</span>
-              </div>
-              <PrologosPosition
-                number={result.number}
-                carBrand={result.carBrand}
-                pilotName={result.pilotName}
-                pilotCountry={result.pilotCountry}
-                navigatorName={result.navigatorName}
-                navigatorCountry={result.navigatorCountry}
-                time={result.time}
-              />
-            </div>
-          ))}
+          {(() => {
+            const leaderTimeMs = sortedResults.length > 0 ? parseTimeToMs(sortedResults[0].time) : 0;
+            return sortedResults.map((result, index) => {
+              const resultTimeMs = parseTimeToMs(result.time);
+              const diffMs = resultTimeMs - leaderTimeMs;
+              const timeToShow = index === 0
+                ? formatMsToTime(resultTimeMs)
+                : formatMsToDiff(diffMs);
+              return (
+                <div key={result.number} className='result-row'>
+                  <div className='position-box'>
+                    <span className='dp-position-number'>{index + 1}º</span>
+                  </div>
+                  <PrologosPosition
+                    number={result.number}
+                    carBrand={result.carBrand}
+                    pilotName={result.pilotName}
+                    pilotCountry={result.pilotCountry}
+                    navigatorName={result.navigatorName}
+                    navigatorCountry={result.navigatorCountry}
+                    time={timeToShow}
+                  />
+                </div>
+              );
+            });
+          })()}
         </div>
       </div>
 

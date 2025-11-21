@@ -50,7 +50,7 @@ const SelectingCompetitor: React.FC = () => {
     return (
       <div className="selecting-competitor">
         <div className="selecting-card empty">
-          <p>Aguardando seleção...</p>
+          <p></p>
         </div>
       </div>
     );
