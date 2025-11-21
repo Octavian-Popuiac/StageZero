@@ -13,21 +13,31 @@
 }
 
 .left-panel {
-  flex: 0;
+  width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 .baja-logo {
-  max-width: 530px;
-  max-height: 271px;
-  object-fit: contain;
+  position: absolute;
+  top: -90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px; /* ou 100%, ou o tamanho que quiseres */
+  height: auto;
+  pointer-events: none; /* para não bloquear cliques */
+}
+
+.space {
+  height: 400px;
 }
 
 .prologo-title-container {
-  width: 560px;
-  height: 50px;
+  width: 1000px;
+  height: 70px;
   background: white;
   display: flex;
   align-items: center;
@@ -38,21 +48,24 @@
 }
 
 .prologos-title {
-  font-size: 30px;
+  font-size: 40px;
   font-weight: bold;
   color: #14638D;
   margin: 0;
 }
 
 .right-panel {
-  flex: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 80%;
+  right: 20px;
+  position: relative;
 }
 
 .partida-title-container {
-  width: 568px;
+  width: 100%;
   height: 116px;
   background: #14638D;
   display: flex;
@@ -60,11 +73,10 @@
   justify-content: center;
   border: 5px solid white;
   box-sizing: border-box;
-  margin-top: 80px;
 }
 
 .partida-title {
-  font-size: 50px;
+  font-size: 60px;
   font-weight: bold;
   color: white;
   margin: 0;
@@ -72,8 +84,9 @@
 }
 
 .competitors-results {
+  flex: 1;
   display: flex;
-  width: 560px;
+  width: 1000px;
   flex-direction: column;
   gap: 9px;
 }
@@ -86,8 +99,8 @@
 }
 
 .position-box {
-  width: 53px;
-  height: 53px;
+  width: 70px;
+  height: 70px;
   background: #14638D;
   display: flex;
   align-items: center;
@@ -133,8 +146,8 @@
 }
 
 .prologos-row {
-  width: 509px;
-  height: 53px;
+  width: 1000px;
+  height: 70px;
   display: flex;
   flex-direction: row;
   background: white;
@@ -148,8 +161,8 @@
   align-items: center;
   justify-content: center;
   width: 60px;
-  height: 53px;
-  margin-left: 0px;
+  height: 70px;
+  margin-left: 30px;
 }
 
 .number{
@@ -162,13 +175,13 @@
   align-items: center;
   justify-content: center;
   width: 100px;
-  height: 53px; 
-  margin-left: 20px;
+  height: 70px; 
+  margin-left: 100px;
 }
 
 .brand-logo {
-  width: 70px;
-  height: 40px;
+  width: 100px;
+  height: 50px;
   object-fit: contain;
   display: block;
   margin: 0 auto;
@@ -182,8 +195,8 @@
   align-items: flex-start; 
   justify-content: center;
   min-width: 120px;
-  height: 53px;
-  margin-left: 40px;
+  height: 70px;
+  margin-left: 100px;
 }
 
 .pilot-box {
@@ -201,7 +214,7 @@
   align-items: center;
   justify-content: flex-start;
   height: 23px;
-  width: 170px;
+  flex: 1;
   margin-bottom: 1px;
 }
 
@@ -215,29 +228,29 @@
 
 .flag-icon {
   width: auto;
-  height: 20px;
+  height: 30px;
   object-fit: contain;
 }
 
 .pilot-info, .navigator-info {
   display: flex;
   align-items: center;
-  margin-left: 5px;
+  margin-left: 10px;
 }
 
 .pilot-name, .navigator-name {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 30px;
+  font-weight: 400;
 }
 
-.time-box{
+.time-box {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-left: 10px;
-  font-weight: 500;
+  justify-content: flex-end;
   flex: 1;
-  padding-right: 10px;
+  font-size: 30px;
+  font-weight: 400;
+  padding-right: 40px;
 }
 
 .slot-container{
@@ -245,13 +258,13 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
-  height: 53px;
+  height: 70px;
 }
 
 .background-container{
   position: absolute;
-  width: 509px;
-  height: 53px;
+  width: 1000px;
+  height: 70px;
   background: #14638D;
   z-index: -1;
 }
@@ -260,8 +273,8 @@
   justify-content: center;
   align-items: center;
   display: flex;
-  width: 53px;
-  height: 53px;
+  width: 70px;
+  height: 70px;
   position: relative;
   left: 5px;
 }
@@ -276,8 +289,8 @@
   flex: 1;
   display: flex;
   background: white;
-  width: 509px;
-  height: 53px;
+  width: 1000px;
+  height: 70px;
   position: relative;
   top: 10px;
 }
@@ -294,11 +307,11 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  margin-top: 30px;
+  margin-top: 70px;
 }
 
 .selecting-competitor {
-  margin-top: 30px;
+  margin-top: 70px;
   display: flex;
   align-self: flex-end;
 }
@@ -492,7 +505,7 @@
 }
 
 .teams-confirm-btn-circle:hover:not(:disabled) {
-  background: #4cb700;
+  background: #4cb1000;
   transform: scale(1.1);
 }
 

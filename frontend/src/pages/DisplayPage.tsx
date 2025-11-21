@@ -88,9 +88,10 @@ const DisplayPage: React.FC = () => {
     <div className='display-page'>
       <div className='left-panel'>
         <img src={`${process.env.PUBLIC_URL}/BAJA_DE_LAGOS.png`}  alt="Logo" className="baja-logo" />
+        <div className='space'></div>
         <div className='prologo-title-container'>
           <h1 className='prologos-title'>
-            Tempos Prólogos
+            Tempos Prólogo
           </h1>
         </div>
         <div className='competitors-results'>
@@ -107,15 +108,15 @@ const DisplayPage: React.FC = () => {
                   <div className='position-box'>
                     <span className='dp-position-number'>{index + 1}º</span>
                   </div>
-                  <PrologosPosition
-                    number={result.number}
-                    carBrand={result.carBrand}
-                    pilotName={result.pilotName}
-                    pilotCountry={result.pilotCountry}
-                    navigatorName={result.navigatorName}
-                    navigatorCountry={result.navigatorCountry}
-                    time={timeToShow}
-                  />
+                    <PrologosPosition
+                      number={result.number}
+                      carBrand={result.carBrand}
+                      pilotName={result.pilotName}
+                      pilotCountry={result.pilotCountry}
+                      navigatorName={result.navigatorName}
+                      navigatorCountry={result.navigatorCountry}
+                      time={timeToShow}
+                    />
                 </div>
               );
             });
