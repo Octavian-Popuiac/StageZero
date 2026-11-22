@@ -16,23 +16,21 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/main.js",
-    "dev": "nodemon"
+    "start": "node --disable-warning=ExperimentalWarning dist/main.js",
+    "dev": "npm run build && npm start",
+    "test": "npm run build && node --disable-warning=ExperimentalWarning --test test/*.test.mjs"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10",
-    "socket.io": "^4.8.1",
-    "ts-node": "^10.9.2"
+    "pdfkit": "^0.21.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "@types/node": "^24.6.2",
-    "@types/socket.io": "^3.0.1",
-    "esbuild": "^0.25.10",
-    "tsx": "^4.20.6",
+    "@types/node": "^22.13.0",
+    "@types/pdfkit": "^0.17.7",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

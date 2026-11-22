@@ -1,46 +1,30 @@
-# Getting Started with Create React App
+# StageZero Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The React and TypeScript interface provides event management, a live projection display, and the mobile controller used by each crew. Vite handles local development and production builds.
 
-## Available Scripts
+See the [main README](../README.md) for installation, event operation, network setup, and troubleshooting. Run all `make` commands from the repository root.
 
-In the project directory, you can run:
+## Local development
 
-### `npm start`
+```sh
+make install
+make dev
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Open `http://127.0.0.1:3000`. Vite proxies `/v1` to the API at `127.0.0.1:8000`. Restart the development processes after changing backend code.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+| Route | Purpose |
+| --- | --- |
+| `/` | Crew management, event start, and final PDF export |
+| `/display` | Animated waiting screen and live starting grid |
+| `/display?debug=1` | Projection display with a small connection indicator |
+| `/controller` | Starting-position selection on the shared mobile device |
 
-### `npm test`
+## Code layout
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- `src/pages/` contains the three interfaces. Crew and position components live in `src/components/`.
+- `src/contexts/PositionContext.tsx` receives state from the SSE endpoint at `/v1/events`. `src/services/rallyService.ts` submits changes to the API and surfaces server errors.
+- `src/App.css` defines the projection layout and its animations, including support for reduced motion.
+- `public/` holds the Baja logo, flags, and vehicle manufacturer images.
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Run `make check` to type-check and build both projects. In event mode, `make run` builds the frontend into `frontend/dist/` and Express serves it together with the API. The Display and Controller use the same backend to stay synchronized.

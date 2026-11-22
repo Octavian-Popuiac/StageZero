@@ -1,164 +1,108 @@
-import React, { useState, useEffect, useRef, use } from 'react';
-import PrologosPosition, { CompetitorPositionProps } from '../components/PrologosPosition';
-import PositionSlot from '../components/PositionSlot';
-import SelectingCompetitor from '../components/SelectingCompetitor';
-import { selectionService, teamService } from '../services/supabaseService';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePosition } from '../contexts/PositionContext';
-import { insertCompetitorWithCascade } from '../utils/positionUtils';
+import PrologosPosition from '../components/PrologosPosition';
+import PositionSlot from '../components/PositionSlot';
 
-const DisplayPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [results, setResults] = useState<CompetitorPositionProps[]>([]);
-
-  const lastProcessedCompetitor = useRef<number | null>(null);
-  const isProcessing = useRef(false);
-
-  const {
-    startPositions,
-    setCompetitors,
-    competitors,
-    selectingCompetitor,
-    getNextCompetitorToVote,
-    setSelectingCompetitor,
-    currentPosition
-  } = usePosition();
-
-  const positionsToShow = (selectingCompetitor && currentPosition)
-    ? insertCompetitorWithCascade(startPositions, selectingCompetitor, currentPosition)
-    : startPositions;
-
-  useEffect(() => {
-    loadTeamsFromSupabase();
-  
-  }, []);
-
-  useEffect(() => {
-    console.log('📺 DisplayPage - Current competitor:', selectingCompetitor?.pilotName || 'none');
-  }, [selectingCompetitor]);
-
-  const loadTeamsFromSupabase = async () => {
-    try {
-      setIsLoading(true);
-      const teamsData = await teamService.getTeams();
-      setResults(teamsData);
-      setCompetitors(teamsData);
-    }catch (error) {
-      console.error('Error loading teams from Supabase:', error);
-    }finally {
-      setIsLoading(false);
-    }
-  };
-
-  function parseTimeToMs(time: string): number {
-    // Aceita formatos como "m:s:cc" ou "mm:ss:cc"
-    const parts = time.split(':').map(Number);
-    // [min, sec, cent]
-    const min = parts[0] || 0;
-    const sec = parts[1] || 0;
-    const cent = parts[2] || 0;
-    return min * 60000 + sec * 1000 + cent * 10;
-  }
-
-  function formatMsToDiff(ms: number): string {
-    const min = Math.floor(ms / 60000);
-    const sec = Math.floor((ms % 60000) / 1000);
-    const cent = Math.floor((ms % 1000) / 10);
-    return `+${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}:${cent.toString().padStart(2, '0')}`;
-  }
-
-  function formatMsToTime(ms: number): string {
-    const min = Math.floor(ms / 60000);
-    const sec = Math.floor((ms % 60000) / 1000);
-    const cent = Math.floor((ms % 1000) / 10);
-    return `${min}:${sec.toString().padStart(2, '0')}:${cent.toString().padStart(2, '0')}`;
-  }
-
-  const sortedResults = competitors;
-
-  if(isLoading) {
-    return (
-      <div className='display-page'>
-        <div className='loading-screen'>
-          <h2>A carregar equipas...</h2>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className='display-page'>
-      <div className='left-panel'>
-        <img src={`${process.env.PUBLIC_URL}/BAJA_DE_LAGOS.png`}  alt="Logo" className="baja-logo" />
-        <div className='space'></div>
-        <div className='prologo-title-container'>
-          <h1 className='prologos-title'>
-            Tempos Prólogo
-          </h1>
-        </div>
-        <div className='competitors-results'>
-          {(() => {
-            const leaderTimeMs = sortedResults.length > 0 ? parseTimeToMs(sortedResults[0].time) : 0;
-            return sortedResults.map((result, index) => {
-              const resultTimeMs = parseTimeToMs(result.time);
-              const diffMs = resultTimeMs - leaderTimeMs;
-              const timeToShow = index === 0
-                ? formatMsToTime(resultTimeMs)
-                : formatMsToDiff(diffMs);
-              return (
-                <div key={result.number} className='result-row'>
-                  <div className='position-box'>
-                    <span className='dp-position-number'>{index + 1}º</span>
-                  </div>
-                    <PrologosPosition
-                      number={result.number}
-                      carBrand={result.carBrand}
-                      pilotName={result.pilotName}
-                      pilotCountry={result.pilotCountry}
-                      navigatorName={result.navigatorName}
-                      navigatorCountry={result.navigatorCountry}
-                      time={timeToShow}
-                    />
-                </div>
-              );
-            });
-          })()}
-        </div>
-      </div>
-
-      <div className='right-panel'>
-        <div className='partida-title-container'>
-          <h1 className='partida-title'>
-            Escolha de Ordem da Partida SS1
-          </h1>
-        </div>
-
-        <div className='start-positions'>
-          {positionsToShow.map((slot, idx) => {
-            // Verifica se este slot mudou em relação ao estado real
-            const realSlot = startPositions[idx];
-            const isChanged =
-              (!realSlot.competitor && slot.competitor) || // Slot ficou ocupado
-              (realSlot.competitor && slot.competitor && realSlot.competitor.number !== slot.competitor.number); // Competitor mudou
-
-            // Destaca o slot selecionado ou qualquer slot que mudou no preview
-            const isSelecting =
-              (selectingCompetitor && currentPosition === slot.position) || isChanged;
-
-            return (
-              <PositionSlot
-                key={slot.position}
-                position={slot.position}
-                isOccupied={slot.competitor !== null}
-                competitor={slot.competitor}
-                isSelecting={isSelecting}
-              />
-            );
-          })}
-        </div>
-
-        <SelectingCompetitor />
-      </div>
-    </div>
-  );
+const toCentiseconds = (time: string) => {
+  const [minutes, seconds, fraction] = time.split(':').map(Number);
+  return minutes * 6000 + seconds * 100 + fraction;
 };
 
-export default DisplayPage;
+const difference = (time: number) => '+' + [
+  Math.floor(time / 6000), Math.floor(time / 100) % 60, time % 100,
+].map(value => String(value).padStart(2, '0')).join(':');
+
+export default function DisplayPage() {
+  const { state, connected } = usePosition();
+  const started = state?.started;
+  const previousStart = useRef<boolean | undefined>(undefined);
+  const [opening, setOpening] = useState(false);
+  const showDiagnostics = new URLSearchParams(window.location.search).get('debug') === '1';
+
+  useLayoutEffect(() => {
+    if (started === true && previousStart.current === false) {
+      setOpening(!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } else if (started === false) {
+      setOpening(false);
+    }
+    previousStart.current = started;
+  }, [started]);
+
+  useEffect(() => {
+    if (!opening) return;
+    const fallback = window.setTimeout(() => setOpening(false), 4000);
+    return () => window.clearTimeout(fallback);
+  }, [opening]);
+
+  const diagnostics = !connected
+    ? <span className="display-connection" role="status">{state ? 'Ligação interrompida' : 'A ligar ao StageZero…'}</span>
+    : showDiagnostics ? <span className="display-connection" data-connected="true" role="status">Em direto</span>
+    : null;
+  if (!started || opening) {
+    return (
+      <main className={`display-intro${opening ? ' opening' : ''}`}
+        onAnimationEnd={event => {
+          if (event.target === event.currentTarget && event.animationName === 'intro-exit') setOpening(false);
+        }}>
+        <div className="intro-perspective" aria-hidden="true">
+          <div className="intro-road" />
+        </div>
+        <div className="intro-content">
+          <div className="intro-logo-plate">
+            <img src="/BAJA_DE_LAGOS.png" alt="Baja de Lagos" className="intro-logo" />
+          </div>
+          <h1>Ordem de partida <span>SS1</span></h1>
+          <p role="status">{opening ? 'Começa a escolha' : 'A escolha vai começar em breve'}</p>
+        </div>
+        <div className="intro-diagnostics">{diagnostics}</div>
+      </main>
+    );
+  }
+
+  const competitors = state?.competitors.slice(0, state.startPositions.length) ?? [];
+  const leader = competitors.length ? toCentiseconds(competitors[0].time) : 0;
+  const team = state?.selectingCompetitor;
+
+  return (
+    <main className="display-page">
+      <header className="display-header">
+        <img src="/BAJA_DE_LAGOS.png" alt="Baja de Lagos" className="baja-logo" />
+        <div className="display-heading"><p>Baja de Lagos</p><h1>Ordem de partida · SS1</h1></div>
+        {diagnostics}
+      </header>
+      <div className="display-panels">
+        <section className="display-panel" aria-label="Tempos do prólogo">
+          <h2>Tempos do prólogo</h2>
+          <div className="display-rows">
+            {competitors.map((entry, index) => (
+              <div className="result-row" key={entry.number}>
+                <span className="display-rank">{index + 1}º</span>
+                <PrologosPosition {...entry} time={index ? difference(toCentiseconds(entry.time) - leader) : entry.time} />
+              </div>
+            ))}
+            {competitors.length === 0 && <p className="display-empty">{state ? 'À espera de equipas' : 'A carregar'}</p>}
+          </div>
+        </section>
+        <section className="display-panel" aria-label="Grelha de partida">
+          <h2>Grelha de partida</h2>
+          <div className="display-rows">
+            {(connected ? state?.previewPositions : state?.startPositions)?.map((slot, index) => (
+              <PositionSlot key={slot.position} position={slot.position} competitor={slot.competitor}
+                isSelecting={Boolean(connected && team && (slot.position === state?.currentPosition
+                  || slot.competitor?.number !== state?.startPositions[index].competitor?.number))} />
+            ))}
+          </div>
+        </section>
+      </div>
+      <footer className="display-footer">
+        <span>{team ? 'A escolher' : 'Escolha de posições'}</span>
+        <div className="display-active-crew">
+          <strong>{team ? `#${team.number} · ${team.pilotName}`
+            : state?.eligibleCount ? 'Ordem de partida confirmada' : 'A aguardar equipas'}</strong>
+          {team && <span className="display-active-navigator">{team.navigatorName}</span>}
+        </div>
+        <span>{state ? `${state.startPositions.filter(slot => slot.competitor).length} / ${state.eligibleCount}` : '—'}</span>
+      </footer>
+    </main>
+  );
+}

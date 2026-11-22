@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { CompetitorPositionProps } from "./PrologosPosition";
-import { teamService } from "../services/supabaseService";
+import { usePosition } from "../contexts/PositionContext";
 
 const COUNTRIES = [
   { name: 'Portugal' },
@@ -25,7 +25,10 @@ const CAR_BRANDS = [
 ];
 
 const TeamManager: React.FC = () => {
-  const [teams, setTeams] = useState<CompetitorPositionProps[]>([]);
+  const { state, connected, change } = usePosition();
+  const teams = state?.competitors ?? [];
+  const votingStarted = state?.started;
+  const locked = !connected || votingStarted;
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<CompetitorPositionProps | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,33 +44,6 @@ const TeamManager: React.FC = () => {
     time: '',
   });
 
-  useEffect(() => {
-    loadTeams();
-
-    const subscription = teamService.subscribeToTeamChanges((updatedTeams) => {
-      setTeams(updatedTeams);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const loadTeams = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const teamsData = await teamService.getTeams();
-      setTeams(teamsData);
-    } catch (err) {
-      setError('Erro ao carregar as equipas.');
-      console.error(err);
-    }finally{
-      setIsLoading(false);
-    }
-  }
-
   const handleInputChange = (field: keyof CompetitorPositionProps, value: string | number) => {
     setFormData(prev => ({
       ...prev,
@@ -82,44 +58,19 @@ const TeamManager: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      const newTeam : CompetitorPositionProps = {
-      number: formData.number,
-      carBrand: formData.carBrand,
-      pilotName: formData.pilotName,
-      pilotCountry: formData.pilotCountry,
-      navigatorName: formData.navigatorName,
-      navigatorCountry: formData.navigatorCountry,
-      time: formData.time,
-    };
-    console.log('Submitting team:', newTeam);
-
-    if (editingTeam) {
-      await teamService.updateTeam(newTeam);
-      setEditingTeam(null);
-    } else {
-      await teamService.addTeam(newTeam);
+      if (editingTeam) {
+        await change(`/teams/${editingTeam.number}`, 'PUT', formData);
+        setEditingTeam(null);
+      } else {
+        await change('/teams', 'POST', formData);
+      }
+      setShowForm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao guardar a equipa.');
+    } finally {
+      setIsLoading(false);
     }
-
-    await loadTeams();
-
-    setFormData({
-      number: Math.max(...teams.map(t => t.number), 0) + 1,
-      carBrand: '',
-      pilotName: '',
-      pilotCountry: '',
-      navigatorName: '',
-      navigatorCountry: '',
-      time: '',
-    });
-    
-    setShowForm(false);
-  } catch (err) {
-    setError('Erro ao submeter a equipa.');
-    console.error(err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleEdit = (team: CompetitorPositionProps) => {
     setFormData(team);
@@ -134,10 +85,9 @@ const TeamManager: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        await teamService.deleteTeam(teamNumber);
-        await loadTeams();
+        await change(`/teams/${teamNumber}`, 'DELETE');
       } catch (err) {
-        setError('Erro ao apagar a equipa.');
+        setError(err instanceof Error ? err.message : 'Erro ao apagar a equipa.');
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -152,10 +102,9 @@ const TeamManager: React.FC = () => {
         setIsLoading(true);
         setError(null);
 
-        await teamService.resetTeams();
-        await loadTeams();
+        await change('/teams', 'DELETE');
       } catch (err) {
-        setError('Erro ao resetar as equipas.');
+        setError(err instanceof Error ? err.message : 'Erro ao apagar as equipas.');
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -163,16 +112,24 @@ const TeamManager: React.FC = () => {
     }
   };
 
-  const sortedTeams = [...teams].sort((a, b) => {
-    if (!a.time || !b.time) return 0;
-    const timeA = a.time.split(':').reduce((acc, val) => acc * 60 + parseFloat(val), 0);
-    const timeB = b.time.split(':').reduce((acc, val) => acc * 60 + parseFloat(val), 0);
-    return timeA - timeB;
-  });
+  const sortedTeams = teams;
+
+  async function resetPositions() {
+    if (!window.confirm('Reiniciar a escolha e limpar a grelha de partida?')) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await change('/reset', 'POST');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao reiniciar as posições.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className="team-manager">
-      {isLoading && 
+      {isLoading &&
         <div className="loading-overlay">
           A carregar...
         </div>
@@ -202,38 +159,42 @@ const TeamManager: React.FC = () => {
                 time: '',
               });
             }}
-            disabled={isLoading}
+            disabled={isLoading || locked}
           >
             {showForm ? 'Cancelar' : 'Adicionar Equipa'}
           </button>
 
           {teams.length > 0 && (
-            <button className="reset-btn" onClick={handleReset} disabled={isLoading}>
-              Resetar tudo
+            <button className="reset-btn" onClick={handleReset} disabled={isLoading || locked}>
+              Apagar equipas
             </button>
           )}
         </div>
       </div>
-          
+
       {showForm && (
         <form className="team-form" onSubmit={handleSubmit}>
           <h3>{editingTeam ? 'Editar Equipa' : 'Adicionar Equipa'}</h3>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Número:</label>
+              <label htmlFor="team-number">Número:</label>
               <input
+                id="team-number"
                 type="number"
+                disabled={editingTeam !== null}
+                max="99999"
                 min="1"
-                value={formData.number}
+                value={Number.isNaN(formData.number) ? "" : formData.number}
                 onChange={(e) => handleInputChange('number', parseInt(e.target.value))}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Marca do Carro:</label>
+              <label htmlFor="team-carBrand">Marca do Carro:</label>
               <select
+                id="team-carBrand"
                 value={formData.carBrand}
                 onChange={(e) => handleInputChange('carBrand', e.target.value)}
                 required
@@ -246,10 +207,11 @@ const TeamManager: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label>Tempo:</label>
+              <label htmlFor="team-time">Tempo:</label>
               <input
                 type="text"
-                placeholder="2:15:42.8"
+                placeholder="02:15:42"
+                id="team-time"
                 value={formData.time}
                 onChange={(e) => handleInputChange('time', e.target.value)}
                 required
@@ -259,9 +221,10 @@ const TeamManager: React.FC = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Nome do Piloto:</label>
+              <label htmlFor="team-pilotName">Nome do Piloto:</label>
               <input
                 type="text"
+                id="team-pilotName"
                 value={formData.pilotName}
                 onChange={(e) => handleInputChange('pilotName', e.target.value)}
                 required
@@ -269,8 +232,9 @@ const TeamManager: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label>País do Piloto:</label>
+              <label htmlFor="team-pilotCountry">País do Piloto:</label>
               <select
+                id="team-pilotCountry"
                 value={formData.pilotCountry}
                 onChange={(e) => handleInputChange('pilotCountry', e.target.value)}
                 required
@@ -287,9 +251,10 @@ const TeamManager: React.FC = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Nome do Navegador:</label>
+              <label htmlFor="team-navigatorName">Nome do Navegador:</label>
               <input
                 type="text"
+                id="team-navigatorName"
                 value={formData.navigatorName}
                 onChange={(e) => handleInputChange('navigatorName', e.target.value)}
                 required
@@ -297,8 +262,9 @@ const TeamManager: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label>País do Navegador:</label>
+              <label htmlFor="team-navigatorCountry">País do Navegador:</label>
               <select
+                id="team-navigatorCountry"
                 value={formData.navigatorCountry}
                 onChange={(e) => handleInputChange('navigatorCountry', e.target.value)}
                 required
@@ -314,11 +280,11 @@ const TeamManager: React.FC = () => {
           </div>
 
           <div className="form-buttons">
-            <button type="submit" className="save-btn">
-              {editingTeam ? 'Salvar Alterações' : 'Adicionar Equipa'}
+            <button type="submit" className="save-btn" disabled={locked || isLoading}>
+              {editingTeam ? 'Guardar alterações' : 'Adicionar Equipa'}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="cancel-btn"
               onClick={() => {
                 setShowForm(false);
@@ -331,6 +297,13 @@ const TeamManager: React.FC = () => {
         </form>
       )}
 
+      {!connected && <p role="status">A aguardar ligação ao servidor…</p>}
+      {votingStarted && (
+        <div className="voting-lock">
+          <p>Reinicia a escolha para voltar a editar as equipas.</p>
+          <button onClick={resetPositions} disabled={isLoading || !connected}>Reiniciar posições</button>
+        </div>
+      )}
       <div className="teams-list">
         {sortedTeams.length === 0 ? (
           <div className="empty-state">
@@ -356,14 +329,14 @@ const TeamManager: React.FC = () => {
                 </div>
                 <div className="team-time">{team.time}</div>
                 <div className="team-actions">
-                  <button 
-                    className="edit-btn"
+                  <button
+                    className="edit-btn" disabled={locked || isLoading} aria-label={`Editar equipa ${team.number}`}
                     onClick={() => handleEdit(team)}
                   >
                     ✏️
                   </button>
-                  <button 
-                    className="delete-btn"
+                  <button
+                    className="delete-btn" disabled={locked || isLoading} aria-label={`Apagar equipa ${team.number}`}
                     onClick={() => handleDelete(team.number)}
                   >
                     🗑️

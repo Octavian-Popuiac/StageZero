@@ -1,42 +1,16 @@
-import React from "react";
-import PrologosPosition, { CompetitorPositionProps } from "./PrologosPosition";
-import { usePosition } from "../contexts/PositionContext";
+import PrologosPosition, { type CompetitorPositionProps } from './PrologosPosition';
 
 interface PositionSlotProps {
   position: number;
-  isOccupied: boolean;
-  competitor?: CompetitorPositionProps | null;
-  isSelecting?: boolean;
+  competitor: CompetitorPositionProps | null;
+  isSelecting: boolean;
 }
 
-const PositionSlot: React.FC<PositionSlotProps> = ({
-  position,
-  isOccupied,
-  competitor,
-  isSelecting = false
-}) => {
-
+export default function PositionSlot({ position, competitor, isSelecting }: PositionSlotProps) {
   return (
-    <div className={`slot-container${isSelecting ? ' selecting' : ''}`}>
-      <div className="background-container" />
-      <div className="slot-position-box">
-        <span className="slot-position-number">{position}º</span>
-      </div>
-
-      {isOccupied && competitor ? (
-        <div className="ocupied-competitor">
-          <PrologosPosition {...competitor} />
-        </div>
-      ) : isSelecting && competitor ? (
-        <div className="ocupied-competitor">
-          <PrologosPosition {...competitor} />
-        </div>
-      ) : (
-        <div className="slot-empty">
-        </div>
-      )}
+    <div className={`result-row${isSelecting ? ' selecting' : ''}`}>
+      <span className="display-rank">{position}º</span>
+      {competitor ? <PrologosPosition {...competitor} /> : <div className="slot-empty">—</div>}
     </div>
-  )
+  );
 }
-
-export default PositionSlot;

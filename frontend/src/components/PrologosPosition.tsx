@@ -26,25 +26,26 @@ const PrologosPosition: React.FC<CompetitorPositionProps> = ({
       </div>
 
       <div className="car-brand-box">
-        <img src={`/brands/${carBrand.toUpperCase()}.png`} className="brand-logo" />
+        <img src={`/brands/${carBrand.toUpperCase()}.png`} className="brand-logo" alt="" />
+        <span className="brand-name">{carBrand.toUpperCase() === 'VOLSKWAGEN' ? 'VOLKSWAGEN' : carBrand}</span>
       </div>
 
       <div className="crew-box">
         <div className="pilot-box">
           <div className="pilot-flag">
-            <img src={`/flags/${pilotCountry.toLowerCase()}.png`} className="flag-icon" />
+            <img src={`/flags/${pilotCountry.toLowerCase()}.png`} className="flag-icon" alt="" />
           </div>
           <div className="pilot-info">
-            <span className="pilot-name">{pilotName}</span>
+            <span className="pilot-name" title={pilotName}>{pilotName}</span>
           </div>
         </div>
 
         <div className="navigator-box">
           <div className="navigator-flag">
-            <img src={`/flags/${navigatorCountry.toLowerCase()}.png`} className="flag-icon" />
+            <img src={`/flags/${navigatorCountry.toLowerCase()}.png`} className="flag-icon" alt="" />
           </div>
           <div className="navigator-info">
-            <span className="navigator-name">{navigatorName}</span>
+            <span className="navigator-name" title={navigatorName}>{navigatorName}</span>
           </div>
         </div>
       </div>
